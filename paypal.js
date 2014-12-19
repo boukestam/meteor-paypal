@@ -2,11 +2,11 @@ Meteor.Paypal = {
 
   account_options: {},
   //authorize submits a payment authorization to Paypal
-  authorize: function(card_info, payment_info, callback){
-    Meteor.call('paypal_submit', 'authorize', card_info, payment_info, callback);
+  authorize: function(payment_info, callback){
+    Meteor.call('paypal_submit', 'authorize', payment_info, callback);
   },
-  purchase: function(card_info, payment_info, callback){
-    Meteor.call('paypal_submit', 'sale', card_info, payment_info, callback);
+  purchase: function(payment_info, callback){
+    Meteor.call('paypal_submit', 'sale', payment_info, callback);
   },
   //config is for the paypal configuration settings.
   config: function(options){
@@ -16,7 +16,7 @@ Meteor.Paypal = {
     return {
       "intent": "sale",
       "payer": {
-        "payment_method": "credit_card",
+        "payment_method": "paypal",
         "funding_instruments": []},
       "transactions": []
     };
@@ -51,11 +51,10 @@ if(Meteor.isServer){
     var Fiber = Npm.require('fibers');
     var Future = Npm.require('fibers/future');
     Meteor.methods({
-      paypal_submit: function(transaction_type, cardData, paymentData){
+      paypal_submit: function(transaction_type, paymentData){
         paypal_sdk.configure(Meteor.Paypal.account_options);
         var payment_json = Meteor.Paypal.payment_json();
         payment_json.intent = transaction_type;
-        payment_json.payer.funding_instruments.push(Meteor.Paypal.parseCardData(cardData));
         payment_json.transactions.push(Meteor.Paypal.parsePaymentData(paymentData));
         var fut = new Future();
         this.unblock();
